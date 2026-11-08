@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasAll(['uid', 'email', 'role'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.role in ['ADMIN', 'REMOTE_DEVICE', 'SUPER_ADMIN'];
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role; // Prevent self-escalation
+      allow delete: if false;
+    }
+
+    // Enrolled Devices
+    match /devices/{deviceId} {
+      allow read: if isSignedIn() && (
+        resource.data.adminId == request.auth.uid ||
+        resource.data.id == deviceId
+      );
+
+      // Create new paired device
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['id', 'adminId', 'name', 'model', 'isOnline'])
+        && request.resource.data.adminId == request.auth.uid
+        && isValidId(request.resource.data.id);
+
+      // Update telemetry, battery, or status
+      allow update: if isSignedIn() && (
+        resource.data.adminId == request.auth.uid ||
+        request.resource.data.adminId == resource.data.adminId
+      );
+
+      // Only admin can remove device
+      allow delete: if isSignedIn() && resource.data.adminId == request.auth.uid;
+    }
+
+    // Ephemeral Pairing Requests (PIN / QR code)
+    match /pairingRequests/{pairingId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.adminId == request.auth.uid
+        && request.resource.data.pairingCode is string
+        && request.resource.data.pairingCode.size() <= 10;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.adminId == request.auth.uid;
+    }
+
+    // WebRTC Live Sessions with explicit approval
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn() && (
+        resource.data.adminId == request.auth.uid ||
+        resource.data.deviceId is string
+      );
+
+      // Admin requests camera / mic session
+      allow create: if isSignedIn()
+        && request.resource.data.adminId == request.auth.uid
+        && request.resource.data.keys().hasAll(['id', 'deviceId', 'adminId', 'streamType', 'status', 'requestedAt'])
+        && request.resource.data.status == 'PENDING_APPROVAL';
+
+      // Remote device owner approves/rejects, or either party terminates
+      allow update: if isSignedIn() && (
+        resource.data.adminId == request.auth.uid ||
+        request.resource.data.adminId == resource.data.adminId
+      );
+
+      allow delete: if isSignedIn() && resource.data.adminId == request.auth.uid;
+
+      // WebRTC SDP and ICE Signaling subcollection
+      match /signaling/{signalId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+          && request.resource.data.keys().hasAll(['id', 'sessionId', 'senderId', 'type'])
+          && request.resource.data.sessionId == sessionId;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

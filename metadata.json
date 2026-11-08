@@ -1,0 +1,6 @@
+{
+  "name": "Smart Remote Connect Pro",
+  "description": "Secure multi-device Android remote monitoring with WebRTC video/audio streaming, CameraX, battery telemetry, and full Android Studio project source.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
