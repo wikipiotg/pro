@@ -1097,11 +1097,11 @@ on:
 
 jobs:
   build:
-    name: Build Android APK & Bundle
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -1109,55 +1109,61 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Gradle Cache
-        uses: actions/cache@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: \${{ runner.os }}-gradle-\${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            \${{ runner.os }}-gradle-
+          gradle-version: '8.9'
 
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew || true
-
-      - name: Inject google-services.json
+      - name: Configure Android SDK Licenses
         run: |
-          if [ -n "\${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-            echo "\${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
-            echo "google-services.json successfully injected"
-          else
-            echo "Warning: GOOGLE_SERVICES_JSON secret not found, using template configuration"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Ensure google-services.json exists
+        run: |
+          if [ ! -f "app/google-services.json" ]; then
+            echo "Generating app/google-services.json..."
+            cat << 'EOF' > app/google-services.json
+            {
+              "project_info": {
+                "project_number": "93899406021",
+                "project_id": "citric-voyager-gfx4d",
+                "storage_bucket": "citric-voyager-gfx4d.firebasestorage.app"
+              },
+              "client": [
+                {
+                  "client_info": {
+                    "mobilesdk_app_id": "1:93899406021:android:b5c97b57fadb89c6f90eac",
+                    "android_client_info": {
+                      "package_name": "com.smartremote.connectpro"
+                    }
+                  },
+                  "oauth_client": [],
+                  "api_key": [{ "current_key": "AIzaSyBU5iO-U9ryApJqcWky7U24C_KdCR7zdoQ" }],
+                  "services": {}
+                }
+              ],
+              "configuration_version": "1"
+            }
+          EOF
           fi
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build Debug APK with Gradle
+        run: |
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --no-daemon --stacktrace || gradle assembleDebug --no-daemon --stacktrace
+          else
+            gradle assembleDebug --no-daemon --stacktrace
+          fi
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: SmartRemoteConnectPro-Debug-APK
           path: app/build/outputs/apk/debug/*.apk
-          retention-days: 14
-
-      - name: Build Release Bundle & APK
-        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-        run: ./gradlew assembleRelease bundleRelease || true
-
-      - name: Upload Release Artifacts
-        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmartRemoteConnectPro-Release
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn
           retention-days: 30
 `
   },
