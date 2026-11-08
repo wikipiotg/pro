@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const DocumentationModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const [activeDoc, setActiveDoc] = useState<'FIREBASE' | 'WEBRTC' | 'RELEASE' | 'PRIVACY'>('FIREBASE');
+  const [activeDoc, setActiveDoc] = useState<'FIREBASE' | 'WEBRTC' | 'RELEASE' | 'GITHUB' | 'PRIVACY'>('GITHUB');
 
   if (!isOpen) return null;
 
@@ -34,10 +34,21 @@ export const DocumentationModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 bg-[#0B1020]/50 px-6 gap-2">
+        <div className="flex border-b border-slate-800 bg-[#0B1020]/50 px-6 gap-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveDoc('GITHUB')}
+            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeDoc === 'GITHUB'
+                ? 'border-blue-500 text-blue-400'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Wrench className="w-4 h-4 text-emerald-400" />
+            GitHub Actions CI/CD (বাংলা)
+          </button>
           <button
             onClick={() => setActiveDoc('FIREBASE')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeDoc === 'FIREBASE'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -48,7 +59,7 @@ export const DocumentationModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </button>
           <button
             onClick={() => setActiveDoc('WEBRTC')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeDoc === 'WEBRTC'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -59,30 +70,95 @@ export const DocumentationModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </button>
           <button
             onClick={() => setActiveDoc('RELEASE')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeDoc === 'RELEASE'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Wrench className="w-4 h-4" />
-            Android Studio & Signed APK
+            Android Studio & APK
           </button>
           <button
             onClick={() => setActiveDoc('PRIVACY')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeDoc === 'PRIVACY'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Shield className="w-4 h-4" />
-            Zero-Trust & Consent Policy
+            Zero-Trust Policy
           </button>
         </div>
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm text-slate-300 leading-relaxed">
+          {activeDoc === 'GITHUB' && (
+            <div className="space-y-5">
+              <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl space-y-1">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Wrench className="w-5 h-5 text-emerald-400" />
+                  GitHub Actions দিয়ে ক্লাউডে Android APK Build করুন
+                </h3>
+                <p className="text-xs text-slate-300">
+                  আপনার পিসিতে Android Studio বা ভারী সফটওয়্যার না থাকলেও সরাসরি GitHub এর ক্লাউড সার্ভার দিয়ে স্বয়ংক্রিয়ভাবে APK তৈরি করে ডাউনলোড করা যাবে।
+                </p>
+              </div>
+
+              {/* 4 Steps */}
+              <div className="space-y-4">
+                <div className="p-4 bg-[#0B1020] rounded-xl border border-slate-800 space-y-2">
+                  <div className="font-bold text-white text-xs flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">১</span>
+                    প্রজেক্ট জিপ ফাইল ডাউনলোড করুন
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    উপরে ডানদিকের <strong>"Android Codebase"</strong> বাটনে ক্লিক করে <strong>"Download Project (.ZIP)"</strong> ডাউনলোড করে আনজিপ করুন। এর ভেতর ইতিমধ্যে <code>.github/workflows/android-build.yml</code> এবং সব Gradle ও Kotlin ফাইল সাজানো আছে।
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[#0B1020] rounded-xl border border-slate-800 space-y-2">
+                  <div className="font-bold text-white text-xs flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">২</span>
+                    GitHub-এ নতুন Repository খুলে Push করুন
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    GitHub-এ একটি নতুন Repository (যেমন: <code>smart-remote-connect-pro</code>) তৈরি করুন এবং আপনার টার্মিনাল দিয়ে কোড পুশ করুন:
+                  </p>
+                  <pre className="p-3 bg-black/60 rounded-lg text-xs font-mono text-blue-300 overflow-x-auto">
+git init{'\n'}
+git add .{'\n'}
+git commit -m "feat: smart remote connect pro native android"{'\n'}
+git branch -M main{'\n'}
+git remote add origin https://github.com/YOUR_USERNAME/smart-remote-connect-pro.git{'\n'}
+git push -u origin main
+                  </pre>
+                </div>
+
+                <div className="p-4 bg-[#0B1020] rounded-xl border border-slate-800 space-y-2">
+                  <div className="font-bold text-white text-xs flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">৩</span>
+                    স্বয়ংক্রিয় ক্লাউড বিল্ড (GitHub Actions)
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    কোড পুশ করার সাথে সাথে GitHub-এর <strong>Actions</strong> ট্যাবে <code>Build Smart Remote Connect Pro Android APK</code> ওয়ার্কফ্লোটি চালু হয়ে যাবে। এটি স্বয়ংক্রিয়ভাবে JDK 17, Android SDK 35 সেটআপ করে <code>./gradlew assembleDebug</code> রান করবে।
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[#0B1020] rounded-xl border border-slate-800 space-y-2">
+                  <div className="font-bold text-white text-xs flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">৪</span>
+                    সরাসরি APK ডাউনলোড করুন
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    বিল্ড সম্পন্ন হলে ওয়ার্কফ্লো রানের নিচে <strong>Artifacts</strong> সেকশনে <strong>SmartRemoteConnectPro-Debug-APK</strong> পাবেন। সেখান থেকে এক ক্লিকে ডাউনলোড করে যেকোনো Android ফোনে ইন্সটল করতে পারবেন।
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeDoc === 'FIREBASE' && (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-white flex items-center gap-2">

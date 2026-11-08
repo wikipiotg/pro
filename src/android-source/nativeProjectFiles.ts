@@ -1080,5 +1080,175 @@ lt-cred-mech
 user=remoteuser:SuperSecureSecretKey123!
 \`\`\`
 `
+  },
+  {
+    path: '.github/workflows/android-build.yml',
+    module: 'ci-cd',
+    language: 'kotlin',
+    description: 'GitHub Actions automated cloud CI/CD pipeline to compile debug and release APK/AAB',
+    content: `name: Build Smart Remote Connect Pro Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK & Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: \${{ runner.os }}-gradle-\${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            \${{ runner.os }}-gradle-
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew || true
+
+      - name: Inject google-services.json
+        run: |
+          if [ -n "\${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo "\${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+            echo "google-services.json successfully injected"
+          else
+            echo "Warning: GOOGLE_SERVICES_JSON secret not found, using template configuration"
+          fi
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartRemoteConnectPro-Debug-APK
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Build Release Bundle & APK
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: ./gradlew assembleRelease bundleRelease || true
+
+      - name: Upload Release Artifacts
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartRemoteConnectPro-Release
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          retention-days: 30
+`
+  },
+  {
+    path: 'gradle/wrapper/gradle-wrapper.properties',
+    module: 'gradle',
+    language: 'kotlin',
+    description: 'Gradle wrapper distribution properties for automated cloud builds',
+    content: `distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\\://services.gradle.org/distributions/gradle-8.9-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+`
+  },
+  {
+    path: 'app/google-services.json',
+    module: 'app',
+    language: 'json',
+    description: 'Firebase configuration credentials for Google Play Services integration',
+    content: `{
+  "project_info": {
+    "project_number": "93899406021",
+    "project_id": "citric-voyager-gfx4d",
+    "storage_bucket": "citric-voyager-gfx4d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:93899406021:android:b5c97b57fadb89c6f90eac",
+        "android_client_info": {
+          "package_name": "com.smartremote.connectpro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "93899406021-m6tochdurir2b1kgnbuvn5s77dga2nom.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBU5iO-U9ryApJqcWky7U24C_KdCR7zdoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}`
+  },
+  {
+    path: 'documentation/GITHUB_ACTIONS_BUILD_GUIDE.md',
+    module: 'documentation',
+    language: 'markdown',
+    description: 'GitHub Actions cloud compilation & APK download guide in Bengali and English',
+    content: `# GitHub Actions দিয়ে Android APK Build করার সম্পূর্ণ গাইড (Bengali & English)
+
+## বাংলা নির্দেশিকা (Bengali Guide)
+
+আপনি যদি আপনার কম্পিউটারে Android Studio ইন্সটল না করেই সরাসরি **GitHub Cloud** দিয়ে APK বিল্ড ও ডাউনলোড করতে চান, তাহলে নিচের ধাপগুলো অনুসরণ করুন:
+
+### ধাপ ১: একটি নতুন GitHub Repository তৈরি করুন
+1. [github.com](https://github.com) এ লগইন করুন।
+2. **New Repository** তে ক্লিক করুন (নাম দিন \`smart-remote-connect-pro\`)।
+3. Repository টি **Private** বা **Public** সিলেক্ট করে **Create Repository** বাটনে চাপুন।
+
+### ধাপ ২: কোড GitHub-এ Push করুন
+টার্মিনাল বা কমান্ড প্রম্পটে নিচের কমান্ডগুলো চালান:
+\`\`\`bash
+# ডাউনলোড করা ফোল্ডারে প্রবেশ করুন
+git init
+git add .
+git commit -m "Initial commit: Smart Remote Connect Pro"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/smart-remote-connect-pro.git
+git push -u origin main
+\`\`\`
+
+### ধাপ ৩: অটোমেটিক APK তৈরি ও ডাউনলোড
+1. আপনার GitHub Repository-র **Actions** ট্যাবে যান।
+2. আপনি দেখতে পাবেন **"Build Smart Remote Connect Pro Android APK"** ওয়ার্কফ্লোটি স্বয়ংক্রিয়ভাবে চালু হয়ে গেছে।
+3. বিল্ড সম্পন্ন হলে (প্রায় ২-৩ মিনিট) ওয়ার্কফ্লোতে ক্লিক করুন।
+4. নিচে **Artifacts** সেকশনে ক্লিক করে সরাসরি **SmartRemoteConnectPro-Debug-APK** ডাউনলোড করে আপনার ফোনে ইন্সটল করুন!
+`
   }
 ];
+

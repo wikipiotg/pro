@@ -94,10 +94,10 @@ export const Header: React.FC<Props> = ({
 
           <button
             onClick={onOpenDocs}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151D30] hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/60 text-xs font-semibold transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
           >
             <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-            Docs
+            GitHub Build (APK)
           </button>
         </div>
       </div>

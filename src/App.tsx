@@ -64,18 +64,18 @@ export default function App() {
 
           <div className="flex items-center gap-2 shrink-0">
             <button
+              onClick={() => setIsDocsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all shadow-md shadow-emerald-600/30 cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              GitHub দিয়ে APK Build (গাইড)
+            </button>
+            <button
               onClick={() => setIsCodeExplorerOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs font-semibold transition-all cursor-pointer"
             >
               <FolderGit2 className="w-3.5 h-3.5" />
-              Inspect Kotlin Source
-            </button>
-            <button
-              onClick={() => setIsDocsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              Build Guides
+              Android Codebase & ZIP
             </button>
           </div>
         </div>
